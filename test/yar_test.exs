@@ -33,4 +33,9 @@ defmodule YARTest do
     assert "OK" == YAR.execute(c, "SET BAR BLAM")
     assert ["BANG", "BLAM"] == YAR.execute(c, "MGET FOO BAR")
   end
+
+  test "pass in iolist", %{connection: c} do
+    assert "OK" == YAR.execute(c, ["SET", "FOO", "BAR"])
+    assert "BAR" == YAR.execute(c, ["GET", "FOO"])
+  end
 end

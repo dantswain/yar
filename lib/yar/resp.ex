@@ -1,6 +1,12 @@
 defmodule YAR.RESP do
-  def from_string(s) do
+  def parse_command(s) when is_binary(s) do
     from_array(String.split(s))
+  end
+  def parse_command(s) when is_list(s) do
+    s
+    |> Enum.map(&maybe_split/1)
+    |> List.flatten
+    |> from_array
   end
 
   def from_array(a) do
@@ -48,4 +54,7 @@ defmodule YAR.RESP do
   end
 
   defp tail_head([_h |t]), do: List.first(t)
+
+  defp maybe_split(s) when is_binary(s), do: String.split(s)
+  defp maybe_split(s), do: s
 end

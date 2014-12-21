@@ -7,7 +7,7 @@ defmodule YAR do
   end
 
   def execute(connection, string) do
-    resp_data = YAR.RESP.from_string(string)
+    resp_data = YAR.RESP.parse_command(string)
     resp_response = execute_raw_sync(connection, resp_data)
     YAR.RESP.parse_response(resp_response)
   end
