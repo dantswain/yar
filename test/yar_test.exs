@@ -35,7 +35,12 @@ defmodule YARTest do
   end
 
   test "pass in iolist", %{connection: c} do
-    assert "OK" == YAR.execute(c, ["SET", "FOO", "BAR"])
-    assert "BAR" == YAR.execute(c, ["GET", "FOO"])
+    assert "OK" == YAR.execute(c, ["SET", "FOO BAR"])
+    assert "BAR" == YAR.execute(c, ['GET', 'FOO'])
+  end
+
+  test "does not handle mixed iolists", %{connection: c}  do
+    assert {:error, "Protocol error: expected '$', got ' '"} ==
+      YAR.execute(c, ["SET", 'FOO', "1"])
   end
 end

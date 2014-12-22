@@ -3,6 +3,14 @@ defmodule YAR.RESP do
     from_array(String.split(s))
   end
   def parse_command(s) when is_list(s) do
+    if is_deep_list?(s) do
+      from_array(s)
+    else
+      from_binary(s)
+    end
+  end
+
+  def from_binary(s) do
     s
     |> Enum.map(&maybe_split/1)
     |> List.flatten
@@ -49,7 +57,7 @@ defmodule YAR.RESP do
 
   defp from_array([], so_far), do: so_far
   defp from_array([h | t], so_far) do
-    length = String.length(h)
+    length = sending_length(h)
     from_array(t, so_far <> "$#{length}\r\n#{h}\r\n")
   end
 
@@ -57,4 +65,13 @@ defmodule YAR.RESP do
 
   defp maybe_split(s) when is_binary(s), do: String.split(s)
   defp maybe_split(s), do: s
+
+  defp sending_length(s) when is_binary(s), do: String.length(s)
+  defp sending_length(s) when is_list(s), do: length(s)
+  defp sending_length(s) when is_integer(s), do: 1
+
+  defp is_deep_list?(l = [h | _t]) when is_list(l) do
+    is_list(h)
+  end
+  defp is_deep_list?(_l), do: false
 end
