@@ -54,4 +54,19 @@ defmodule YARTest do
     assert "OK" == YAR.mset(c, ["FOO", "42", "BAR", "baz"])
     assert ["42", "baz"] == YAR.mget(c, ["FOO", "BAR"])
   end
+
+  test "pipelining", %{connection: c} do
+    commands1 = [
+                  ["SET", "FOO", "BAR"],
+                  ["PING"],
+                  ["SET", "BAR", "BAZ"]
+              ]
+    commands2 = [
+                  ["GET FOO"],
+                  ["PING"],
+                  ["GET", "BAR"]
+              ]
+    assert ["OK", "PONG", "OK"] ==  YAR.pipeline(c, commands1)
+    assert ["BAR", "PONG", "BAZ"] == YAR.pipeline(c, commands2)
+  end
 end

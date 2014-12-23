@@ -6,8 +6,8 @@ defmodule YAR do
 
   @type key_t :: String.t
   @type value_t :: String.t | number
-  @type command_t :: String.t | [String.t]
-  @type response_t :: String.t
+  @type command_t :: String.t | [command_t]
+  @type response_t :: String.t | integer | {:error, String.t} | [response_t]
 
   @doc """
   Connect to Redis server at `host:port`.
@@ -32,6 +32,20 @@ defmodule YAR do
     resp_data = YAR.RESP.parse_command(string)
     resp_response = execute_raw_sync(connection, resp_data)
     YAR.RESP.parse_response(resp_response)
+  end
+
+  @doc """
+  Pipeline commands to Redis.
+
+  No string substitution is performed.  Results are returned as an array
+  in order matching the commands.
+  """
+  @spec pipeline(pid, [YAR.command_t]) :: [YAR.response_t]
+  def pipeline(connection, commands) do
+    num_commands = length(commands)
+    resp_data = Enum.map(commands, &YAR.RESP.parse_command/1)
+    execute_raw_sync(connection, resp_data, num_commands)
+    |> Enum.map(&YAR.RESP.parse_response/1)
   end
 
   @doc """
@@ -77,7 +91,18 @@ defmodule YAR do
   end
 
   defp execute_raw_sync(connection, data) do
+    [response] = execute_raw_sync(connection, data, 1)
+    response
+  end
+
+  defp execute_raw_sync(connection, data, num_commands) do
     YAR.Connection.send_sync(connection, data)
+    Enum.map((1..num_commands), fn(_) ->
+               do_recv(connection)
+    end)
+  end
+
+  defp do_recv(connection) do
     header = raw_recv(connection, 1)
     {resp_type, num_lines} = YAR.RESP.parse_response_header(header)
     {resp_type, header <> raw_recv(connection, num_lines - 1)}
