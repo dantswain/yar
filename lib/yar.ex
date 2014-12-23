@@ -23,4 +23,12 @@ defmodule YAR do
   def raw_recv(connection, num_lines) do
     YAR.Connection.recv(connection, num_lines)
   end
+
+  def get(connection, key) do
+    execute(connection, ["GET", "#{key}"])
+  end
+
+  def set(connection, key, value) do
+    execute(connection, ["SET", "#{key}", "#{value}"])
+  end
 end

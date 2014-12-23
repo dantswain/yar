@@ -43,4 +43,10 @@ defmodule YARTest do
     assert {:error, "Protocol error: expected '$', got ' '"} ==
       YAR.execute(c, ["SET", 'FOO', "1"])
   end
+
+  test "set/get helpers", %{connection: c} do
+    assert "OK" == YAR.set(c, "foo", 42)
+    assert "42" == YAR.get(c, "foo")
+    assert "42" == YAR.get(c, 'foo')
+  end
 end
