@@ -25,6 +25,8 @@ defmodule YAR.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:socket, "~>0.2"}]
+    [{:socket, "~>0.2"},
+     {:dialyze, "~>0.1.3", only: :dev},
+     {:ex_doc, "~> 0.6", only: :dev}]
   end
 end
