@@ -1,4 +1,14 @@
 defmodule YAR.RESP do
+  @moduledoc """
+  Implementation of the Redis Serialization Protocol (RESP).
+
+  The [Redis Serialization Protocol (RESP)](http://redis.io/topics/protocol)
+  is the protocol that clients use to communicate with Redis.
+
+  These functions are used by the main YAR module to construct
+  stream data to send to Redis and to decode the responses.
+  """
+
   def parse_command(s) when is_binary(s) do
     from_array(String.split(s))
   end

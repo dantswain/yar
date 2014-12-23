@@ -1,6 +1,10 @@
 defmodule YAR.Connection do
   use GenServer
 
+  @moduledoc """
+  Socket connection state helper.
+  """
+
   def start_link(host, port) do
     GenServer.start_link(__MODULE__, {host, port})
   end
