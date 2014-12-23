@@ -27,6 +27,7 @@ use `YAR.execute/2` to execute raw Redis commands.
 2 = YAR.execute(redis, "INCR FOO")
 "2" = YAR.execute(redis, "GET FOO")
 "OK" = YAR.execute(redis, "SET BAR BAZ")
+"OK" = YAR.execute(redis, ["SET", "BAR", "BAZ"])
 ["2", "BAZ"] = YAR.execute(redis, "MGET FOO BAR")
 {:error, "unknown command 'SUP'"} = YAR.execute(redis, "SUP")
 ```
@@ -44,6 +45,22 @@ supported.
 `YAR.execute/2` is synchronous.  The underlying connection uses
 [elixir-socket](https://github.com/meh/elixir-socket) and stores
 the connection information in a GenServer.
+
+The list form of execute should be favored for performance reasons.
+That is, `YAR.execute(redis, ["GET", "FOO"])` is slightly more
+performant than `YAR.execute(redis, "GET FOO")`.
+
+##Pipelining
+
+YAR supports simple [Redis pipelining](http://redis.io/topics/pipelining)
+via `YAR.pipeline/2`.  The second argument
+is a list of commands.  The responses are returned as a list in order
+corresponding to the commands.
+
+```elixir
+["OK", "PING"] == YAR.pipeline(redis, [["SET", "FOO", "42"], ["PING"]])
+["42", "OK"] == YAR.pipeline(redis, [["GET", "FOO"], ["SET", "FOO", "1"]])
+```
 
 ##Testing
 

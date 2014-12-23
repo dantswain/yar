@@ -37,7 +37,7 @@ defmodule YAR do
   @doc """
   Pipeline commands to Redis.
 
-  No string substitution is performed.  Results are returned as an array
+  No string interpolation is performed.  Results are returned as an array
   in order matching the commands.
   """
   @spec pipeline(pid, [YAR.command_t]) :: [YAR.response_t]
