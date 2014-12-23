@@ -4,10 +4,10 @@ defmodule YAR do
   @default_host "localhost"
   @default_port 6379
 
-  @type key_t :: iodata
-  @type value_t :: iodata | number
-  @type command_t :: iodata
-  @type response_t :: iodata
+  @type key_t :: String.t
+  @type value_t :: String.t | number
+  @type command_t :: String.t | [String.t]
+  @type response_t :: String.t
 
   @doc """
   Connect to Redis server at `host:port`.
@@ -35,7 +35,7 @@ defmodule YAR do
   end
 
   @doc """
-  Get the value associated with `key`.
+  Redis `GET key`
 
   String interpolation is used for `key`.
   """
@@ -45,13 +45,35 @@ defmodule YAR do
   end
 
   @doc """
-  Set the value associated with `key`.
+  Redis `SET key value`
 
   String interpolation is used for `key` and `value`.
   """
   @spec set(pid, YAR.key_t, YAR.value_t) :: String.t
   def set(connection, key, value) do
     execute(connection, ["SET", "#{key}", "#{value}"])
+  end
+
+  @doc """ 
+  Redis `MSET keys_values`
+
+  No string interpolation is performed.  `keys_values` is
+  interleaved as in the syntax to MSET, e.g.,
+  `YAR.mset(c, ["FOO", "FOOVALUE", "BAR", "BARVALUE"])`.
+  """
+  @spec mset(pid, [String.t]) :: String.t
+  def mset(connection, keys_values) do
+    execute(connection, ["MSET", keys_values])
+  end
+
+  @doc """
+  Redis `MGET keys`
+
+  No string interpolation is performed on `keys`.
+  """
+  @spec mget(pid, [String.t]) :: [String.t]
+  def mget(connection, keys) do
+    execute(connection, ["MGET", keys])
   end
 
   defp execute_raw_sync(connection, data) do

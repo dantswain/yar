@@ -49,4 +49,9 @@ defmodule YARTest do
     assert "42" == YAR.get(c, "foo")
     assert "42" == YAR.get(c, 'foo')
   end
+
+  test "mset/mget helpers", %{connection: c} do
+    assert "OK" == YAR.mset(c, ["FOO", "42", "BAR", "baz"])
+    assert ["42", "baz"] == YAR.mget(c, ["FOO", "BAR"])
+  end
 end
