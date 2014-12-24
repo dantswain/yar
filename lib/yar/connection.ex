@@ -21,16 +21,16 @@ defmodule YAR.Connection do
 
   def init({host, port}) do
     sock = Socket.TCP.connect!(host, port, packet: :line)
-    {:ok, sock}
+    {:ok, %{socket: sock}}
   end
 
-  def handle_call({:send, data}, _from, sock) do
-    Socket.Stream.send!(sock, data)
-    {:reply, :ok, sock}
+  def handle_call({:send, data}, _from, state) do
+    Socket.Stream.send!(state[:socket], data)
+    {:reply, :ok, state}
   end
 
-  def handle_call({:recv, times}, _from, sock) do
-    {:reply, do_recv(sock, times, ""), sock}
+  def handle_call({:recv, times}, _from, state) do
+    {:reply, do_recv(state[:socket], times, ""), state}
   end
 
   # local functions
