@@ -62,6 +62,22 @@ corresponding to the commands.
 ["42", "OK"] == YAR.pipeline(redis, [["GET", "FOO"], ["SET", "FOO", "1"]])
 ```
 
+##Pubsub
+
+YAR supports simple [Redis subscribing](http://redis.io/topics/pubsub)
+via `YAR.subscribe/4`.  The first argument is a pid to receive
+messages, the second argument is a list of routing keys, the
+third and fourth arguments are the Redis host and port, respectively
+(default "localhost" and 5379).  Messages are delivered as tuples
+where the first element is `:yarsub` and the second argument is
+the message string.
+
+```elixir
+{:ok, subscriber_pid} = YAR.subscribe(self, ["foo"])
+YAR.execute(redis, ["PUBLISH", "foo", "hullo"])
+flush # => {:yarsub, "hullo"}
+```
+
 ##Testing
 
 Launch a Redis server instance on port 5000 (`redis-server -- port 5000`)

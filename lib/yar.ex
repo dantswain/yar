@@ -90,6 +90,18 @@ defmodule YAR do
     execute(connection, ["MGET", keys])
   end
 
+  @doc """
+  Subscribe to a set of routing keys.
+
+  Messages are delivered to the receiver pid as tuples
+  of the form `{:yarsub, "message"}`.
+  """
+  @spec subscribe(pid, [String.t], String.t, pos_integer) :: GenServer.on_start
+  def subscribe(receiver, keys, host \\ @default_host, port \\ @default_port) do
+    {:ok, connection} = YAR.connect(host, port)
+    YAR.Subscriber.start_link(connection, keys, receiver)
+  end
+
   defp execute_raw_sync(connection, data) do
     [response] = execute_raw_sync(connection, data, 1)
     response

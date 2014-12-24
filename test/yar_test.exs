@@ -69,4 +69,10 @@ defmodule YARTest do
     assert ["OK", "PONG", "OK"] ==  YAR.pipeline(c, commands1)
     assert ["BAR", "PONG", "BAZ"] == YAR.pipeline(c, commands2)
   end
+
+  test "subscribing", %{connection: c} do
+    {:ok, pid} = YAR.subscribe(self, ["foo"], "localhost", @test_port)
+    assert 1 == YAR.execute(c, ["PUBLISH", "foo", "bar"])
+    assert_receive({:yarsub, "bar"})
+  end
 end

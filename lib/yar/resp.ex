@@ -65,13 +65,21 @@ defmodule YAR.RESP do
     {:error, String.strip(error)}
   end
 
+  def parse_subscription_message(msg) do
+    msg
+    |> String.split("\r\n")
+    |> next_to_last
+  end
+
   defp from_array([], so_far), do: so_far
   defp from_array([h | t], so_far) do
     length = sending_length(h)
     from_array(t, so_far <> "$#{length}\r\n#{h}\r\n")
   end
 
-  defp tail_head([_h |t]), do: List.first(t)
+  defp tail_head([_h |t]), do: hd(t)
+
+  defp next_to_last(l), do: :lists.nth(length(l) - 1, l)
 
   defp maybe_split(s) when is_binary(s), do: String.split(s)
   defp maybe_split(s), do: s

@@ -13,8 +13,8 @@ defmodule YAR.Connection do
     GenServer.call(pid, {:send, data})
   end
 
-  def recv(pid, times) do
-    GenServer.call(pid, {:recv, times})
+  def recv(pid, times, timeout \\ 5000) do
+    GenServer.call(pid, {:recv, times}, timeout)
   end
 
   # GenServer callbacks
