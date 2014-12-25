@@ -82,4 +82,15 @@ defmodule YARTest do
     assert "bar\r\nbaz" == YAR.get(c, "foo")
     assert "bar\r\nbaz" == YAR.get(c, "foo")
   end
+
+  test "huge pipeline", %{connection: c} do
+    value = "999999888888777777666666"
+    assert "OK" = YAR.set(c, "foo", value)
+    commands = (1..10000) |> Enum.map(fn(_) -> ["GET", "foo"] end)
+    expected = (1..10000) |> Enum.map(fn(_) -> value end)
+    got = YAR.pipeline(c, commands)
+    assert length(commands) == 10000
+    assert length(expected) == length(got)
+    assert expected == got
+  end
 end
