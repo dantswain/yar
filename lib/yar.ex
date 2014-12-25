@@ -30,8 +30,8 @@ defmodule YAR do
   @spec execute(pid, YAR.command_t) :: YAR.response_t
   def execute(connection, string) do
     resp_data = YAR.RESP.parse_command(string)
-    resp_response = execute_raw_sync(connection, resp_data)
-    YAR.RESP.parse_response(resp_response)
+    execute_raw_sync(connection, resp_data)
+    |> YAR.RESP.parse_map
   end
 
   @doc """
@@ -45,7 +45,7 @@ defmodule YAR do
     num_commands = length(commands)
     resp_data = Enum.map(commands, &YAR.RESP.parse_command/1)
     execute_raw_sync(connection, resp_data, num_commands)
-    |> Enum.map(&YAR.RESP.parse_response/1)
+    |> Enum.map(&YAR.RESP.parse_map/1)
   end
 
   @doc """
@@ -77,7 +77,7 @@ defmodule YAR do
   """
   @spec mset(pid, [String.t]) :: String.t
   def mset(connection, keys_values) do
-    execute(connection, ["MSET", keys_values])
+    execute(connection, ["MSET"] ++ keys_values)
   end
 
   @doc """
@@ -87,7 +87,7 @@ defmodule YAR do
   """
   @spec mget(pid, [String.t]) :: [String.t]
   def mget(connection, keys) do
-    execute(connection, ["MGET", keys])
+    execute(connection, ["MGET"] ++ keys)
   end
 
   @doc """
@@ -117,7 +117,7 @@ defmodule YAR do
   defp do_recv(connection) do
     header = raw_recv(connection, 1)
     {resp_type, num_lines} = YAR.RESP.parse_response_header(header)
-    {resp_type, header <> raw_recv(connection, num_lines - 1)}
+    header <> raw_recv(connection, num_lines - 1)
   end
 
   defp raw_recv(_connection, 0), do: ""

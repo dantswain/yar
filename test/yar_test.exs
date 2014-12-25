@@ -24,7 +24,7 @@ defmodule YARTest do
   end
 
   test "error response", %{connection: c} do
-    assert {:error, "unknown command 'WTFISNOTACOMMAND'"} ==
+    assert {:error, "ERR unknown command 'WTFISNOTACOMMAND'"} ==
       YAR.execute(c, "WTFISNOTACOMMAND")
   end
 
@@ -34,14 +34,9 @@ defmodule YARTest do
     assert ["BANG", "BLAM"] == YAR.execute(c, "MGET FOO BAR")
   end
 
-  test "pass in iolist", %{connection: c} do
-    assert "OK" == YAR.execute(c, ["SET", "FOO BAR"])
-    assert "BAR" == YAR.execute(c, ['GET', 'FOO'])
-  end
-
-  test "does not handle mixed iolists", %{connection: c}  do
-    assert {:error, "Protocol error: expected '$', got ' '"} ==
-      YAR.execute(c, ["SET", 'FOO', "1"])
+  test "pass in list", %{connection: c} do
+    assert "OK" == YAR.execute(c, ["SET", "FOO", "BAR"])
+    assert "BAR" == YAR.execute(c, ["GET", "FOO"])
   end
 
   test "set/get helpers", %{connection: c} do
@@ -62,7 +57,7 @@ defmodule YARTest do
                   ["SET", "BAR", "BAZ"]
               ]
     commands2 = [
-                  ["GET FOO"],
+                  "GET FOO",
                   ["PING"],
                   ["GET", "BAR"]
               ]
@@ -74,5 +69,17 @@ defmodule YARTest do
     {:ok, pid} = YAR.subscribe(self, ["foo"], "localhost", @test_port)
     assert 1 == YAR.execute(c, ["PUBLISH", "foo", "bar"])
     assert_receive({:yarsub, "bar"})
+  end
+
+  test "handle messages with spaces", %{connection: c} do
+    assert "OK" == YAR.set(c, "foo", "bar baz")
+    assert "bar baz" == YAR.get(c, "foo")
+    assert "bar baz" == YAR.get(c, "foo")
+  end
+
+  test "handle messages with line breaks", %{connection: c} do
+    assert "OK" == YAR.set(c, "foo", "bar\r\nbaz")
+    assert "bar\r\nbaz" == YAR.get(c, "foo")
+    assert "bar\r\nbaz" == YAR.get(c, "foo")
   end
 end

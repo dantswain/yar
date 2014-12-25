@@ -12,7 +12,7 @@ defmodule YAR.Subscriber do
 
   def init({connection, keys, receiver}) do
     num_keys = length(keys)
-    resp_data = YAR.RESP.parse_command(["SUBSCRIBE", keys])
+    resp_data = YAR.RESP.parse_command(["SUBSCRIBE"] ++ keys)
     YAR.Connection.send_sync(connection, resp_data)
     YAR.Connection.recv(connection, 6 * num_keys)
     {:ok, %{connection: connection, receiver: receiver}, 0}

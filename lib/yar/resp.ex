@@ -10,21 +10,11 @@ defmodule YAR.RESP do
   """
 
   def parse_command(s) when is_binary(s) do
-    from_array(String.split(s))
+    pieces = Regex.scan(~r/\w+|"(?:\\"|[^"])+"/, s)
+    from_array(List.flatten(pieces))
   end
   def parse_command(s) when is_list(s) do
-    if is_deep_list?(s) do
-      from_array(s)
-    else
-      from_binary(s)
-    end
-  end
-
-  def from_binary(s) do
-    s
-    |> Enum.map(&maybe_split/1)
-    |> List.flatten
-    |> from_array
+    from_array(s)
   end
 
   def from_array(a) do
@@ -38,36 +28,24 @@ defmodule YAR.RESP do
   def parse_response_header("$" <> _rest), do: {:string, 2}
   def parse_response_header("*" <> rest) do
     num_elements = rest
-    |> String.split("\r\n")
+    |> String.split("\r\n", parts: 2)
     |> List.first
     |> String.to_integer
     {:array, 2 * num_elements + 1}
   end
 
-  def parse_response({:array, raw_string}) do
-    parts = String.split(raw_string, "\r\n")
-    [_h | t] = Enum.take_every(parts, 2)
-    t
+  def map_return({:string, string}), do: string
+  def map_return([{:raw_string, string}]), do: string
+  def map_return([{:string, string}]), do: string
+  def map_return([{:integer, integer}]), do: integer
+  def map_return([{:array, array}]) do
+    Enum.map(array, &map_return/1)
   end
-  def parse_response({:integer, ":" <> rest}) do
-    rest
-    |> String.strip
-    |> String.to_integer
-  end
-  def parse_response({:raw_string, "+" <> rest}) do
-    String.strip(rest)
-  end
-  def parse_response({:string, raw_string}) do
-    parts = String.split(raw_string, "\r\n")
-    tail_head(parts)
-  end
-  def parse_response({:error, "-ERR" <> error}) do
-    {:error, String.strip(error)}
-  end
+  def map_return([other]), do: other
 
   def parse_subscription_message(msg) do
     msg
-    |> String.split("\r\n")
+    |> split
     |> next_to_last
   end
 
@@ -77,19 +55,59 @@ defmodule YAR.RESP do
     from_array(t, so_far <> "$#{length}\r\n#{h}\r\n")
   end
 
-  defp tail_head([_h |t]), do: hd(t)
-
   defp next_to_last(l), do: :lists.nth(length(l) - 1, l)
-
-  defp maybe_split(s) when is_binary(s), do: String.split(s)
-  defp maybe_split(s), do: s
 
   defp sending_length(s) when is_binary(s), do: String.length(s)
   defp sending_length(s) when is_list(s), do: length(s)
   defp sending_length(s) when is_integer(s), do: 1
 
-  defp is_deep_list?(l = [h | _t]) when is_list(l) do
-    is_list(h)
+  defp split(s) do
+    String.split(s, "\r\n")
   end
-  defp is_deep_list?(_l), do: false
+
+  def parse_map(s) do
+    map_return(parse(s))
+  end
+
+  def parse(s) do
+    parse(s, [], :infinite)
+  end
+
+  defp parse(s, parts, max_parts) when length(parts) == max_parts do
+    {s, parts}
+  end
+  defp parse("", parts, _max_parts), do: Enum.reverse(parts)
+  defp parse("\r\n" <> remainder, parts, max_parts) do
+    parse(remainder, parts, max_parts)
+  end
+  defp parse("+" <> rest, parts, max_parts) do
+    [string, remainder] = chunk(rest)
+    parse(remainder, parts ++ [{:raw_string, string}], max_parts)
+  end
+  defp parse("-" <> rest, parts, max_parts) do
+    [string, remainder] = chunk(rest)
+    parse(remainder, parts ++ [{:error, string}], max_parts)
+  end
+  defp parse(":" <> rest, parts, max_parts) do
+    [string, remainder] = chunk(rest)
+    parse(remainder,
+               parts ++ [{:integer, String.to_integer(string)}],
+               max_parts)
+  end
+  defp parse("$" <> rest, parts, max_parts) do
+    [string, remainder] = chunk(rest)
+    length = String.to_integer(string)
+    {string_out, remainder} = String.split_at(remainder, length)
+    parse(remainder, parts ++ [{:string, string_out}], max_parts)
+  end
+  defp parse("*" <> rest, parts, max_parts) do
+    [string, remainder] = chunk(rest)
+    num_elements = String.to_integer(string)
+    {remainder, sub_parts} = parse(remainder, [], num_elements)
+    parse(remainder, parts ++ [{:array, sub_parts}], max_parts)
+  end
+
+  defp chunk(s) do
+    String.split(s, "\r\n", parts: 2)
+  end
 end
