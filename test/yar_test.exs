@@ -66,7 +66,7 @@ defmodule YARTest do
   end
 
   test "subscribing", %{connection: c} do
-    {:ok, pid} = YAR.subscribe(self, ["foo"], "localhost", @test_port)
+    {:ok, _pid} = YAR.subscribe(self, ["foo"], "localhost", @test_port)
     assert 1 == YAR.execute(c, ["PUBLISH", "foo", "bar"])
     assert_receive({:yarsub, "bar"})
   end

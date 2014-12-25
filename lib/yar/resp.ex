@@ -34,19 +34,27 @@ defmodule YAR.RESP do
     {:array, 2 * num_elements + 1}
   end
 
+  def map_return([item]), do: map_return(item)
   def map_return({:string, string}), do: string
-  def map_return([{:raw_string, string}]), do: string
-  def map_return([{:string, string}]), do: string
-  def map_return([{:integer, integer}]), do: integer
-  def map_return([{:array, array}]) do
+  def map_return({:raw_string, string}), do: string
+  def map_return({:integer, integer}), do: integer
+  def map_return({:array, array}) do
     Enum.map(array, &map_return/1)
   end
-  def map_return([other]), do: other
+  def map_return({:error, error}), do: {:error, error}
+  def map_return(list) when is_list(list) do
+    Enum.map(list, &map_return/1)
+  end
 
   def parse_subscription_message(msg) do
     msg
     |> split
     |> next_to_last
+  end
+
+  # TODO: This doesn't really check for a complete response
+  def complete_response?(s) do
+    String.ends_with?(s, "\r\n")
   end
 
   defp from_array([], so_far), do: so_far
@@ -58,7 +66,6 @@ defmodule YAR.RESP do
   defp next_to_last(l), do: :lists.nth(length(l) - 1, l)
 
   defp sending_length(s) when is_binary(s), do: String.length(s)
-  defp sending_length(s) when is_list(s), do: length(s)
   defp sending_length(s) when is_integer(s), do: 1
 
   defp split(s) do
