@@ -34,29 +34,12 @@ defmodule YAR.RESP do
     Enum.map(list, &map_return/1)
   end
 
-  def parse_subscription_message(msg) do
-    msg
-    |> split
-    |> next_to_last
-  end
-
-  # TODO: This doesn't really check for a complete response
-  def complete_response?(s) do
-    String.ends_with?(s, "\r\n")
-  end
-
   defp from_array([], so_far), do: so_far
   defp from_array([h | t], so_far) do
     length = sending_length(h)
     from_array(t, so_far <> "$#{length}\r\n#{h}\r\n")
   end
 
-  defp next_to_last(l), do: :lists.nth(length(l) - 1, l)
-
   defp sending_length(s) when is_binary(s), do: String.length(s)
   defp sending_length(s) when is_integer(s), do: 1
-
-  defp split(s) do
-    String.split(s, "\r\n")
-  end
 end
