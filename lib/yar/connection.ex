@@ -21,6 +21,10 @@ defmodule YAR.Connection do
     GenServer.call(pid, {:recv, 1}, timeout)
   end
 
+  def sock(pid) do
+    GenServer.call(pid, :sock)
+  end
+
   # GenServer callbacks
 
   def init({host, port}) do
@@ -35,6 +39,10 @@ defmodule YAR.Connection do
 
   def handle_call({:recv, length}, _from, state) do
     {:reply, do_recv(state[:socket], YAR.RESP.Parser.new("", length)), state}
+  end
+
+  def handle_call(:sock, _from, state) do
+    {:reply, state[:socket], state}
   end
 
   # local functions
