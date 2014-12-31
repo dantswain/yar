@@ -11,7 +11,7 @@ defmodule YAR.Subscriber do
   # GenServer callbacks
 
   def init({connection, keys, receiver}) do
-    resp_data = YAR.RESP.parse_command(["SUBSCRIBE"] ++ keys)
+    resp_data = YAR.RESP.new(["SUBSCRIBE"] ++ keys)
     YAR.Connection.send_sync(connection, resp_data)
     YAR.Connection.recv(connection)
     {:ok, %{connection: connection, receiver: receiver}, 0}

@@ -29,7 +29,7 @@ defmodule YAR do
   """
   @spec execute(pid, YAR.command_t) :: YAR.response_t
   def execute(connection, string) do
-    resp_data = YAR.RESP.parse_command(string)
+    resp_data = YAR.RESP.new(string)
     execute_raw_sync(connection, resp_data)
     |> YAR.RESP.map_return
   end
@@ -42,7 +42,7 @@ defmodule YAR do
   """
   @spec pipeline(pid, [YAR.command_t]) :: [YAR.response_t]
   def pipeline(connection, commands) do
-    resp_data = Enum.map(commands, &YAR.RESP.parse_command/1)
+    resp_data = Enum.map(commands, &YAR.RESP.new/1)
     execute_pipeline(connection, resp_data, length(commands))
     |> YAR.RESP.map_return
     |> Enum.reverse

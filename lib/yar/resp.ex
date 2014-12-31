@@ -9,17 +9,12 @@ defmodule YAR.RESP do
   stream data to send to Redis and to decode the responses.
   """
 
-  def parse_command(s) when is_binary(s) do
+  def new(s) when is_binary(s) do
     pieces = Regex.scan(~r/\w+|"(?:\\"|[^"])+"/, s)
     from_array(List.flatten(pieces))
   end
-  def parse_command(s) when is_list(s) do
+  def new(s) when is_list(s) do
     from_array(s)
-  end
-
-  def from_array(a) do
-    elements = length(a)
-    from_array(a, "*#{elements}\r\n")
   end
 
   def map_return([item]), do: map_return(item)
@@ -32,6 +27,11 @@ defmodule YAR.RESP do
   def map_return({:error, error}), do: {:error, error}
   def map_return(list) when is_list(list) do
     Enum.map(list, &map_return/1)
+  end
+
+  defp from_array(a) do
+    elements = length(a)
+    from_array(a, "*#{elements}\r\n")
   end
 
   defp from_array([], so_far), do: so_far

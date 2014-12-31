@@ -16,6 +16,10 @@ defmodule YAR.RESP.Parser do
 
     def complete?(%State{complete: true}), do: true
     def complete?(%State{complete: false}), do: false
+
+    def append(s = %State{string: existing_string}, new_string) do
+      %State{s | string: existing_string <> new_string}
+    end
   end
 
   def new(string, num_elements) do
@@ -24,13 +28,9 @@ defmodule YAR.RESP.Parser do
 
   def results(%State{result: result}), do: Enum.reverse(result)
 
-  def append(s = %State{string: existing_string}, new_string) do
-    %State{s | string: existing_string <> new_string}
-  end
-
   def append_parse(s, new_string) do
     s
-    |> append(new_string)
+    |> State.append(new_string)
     |> maybe_do_parse
   end
 
