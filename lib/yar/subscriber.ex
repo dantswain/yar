@@ -19,7 +19,7 @@ defmodule YAR.Subscriber do
 
   def handle_info(:timeout, state) do
     got = YAR.Connection.recv(state[:connection], :infinity)
-    msg = YAR.RESP.parse_subscription_message(got)
+    ["message", _key, msg] = YAR.RESP.map_return(got)
     send(state[:receiver], {:yarsub, msg})
     {:noreply, state, 0}
   end

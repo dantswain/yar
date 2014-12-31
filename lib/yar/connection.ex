@@ -13,8 +13,12 @@ defmodule YAR.Connection do
     GenServer.call(pid, {:send, data})
   end
 
+  def recv_array(pid, length, timeout \\ 5000) do
+    GenServer.call(pid, {:recv, length}, timeout)
+  end
+
   def recv(pid, timeout \\ 5000) do
-    GenServer.call(pid, :recv, timeout)
+    GenServer.call(pid, {:recv, 1}, timeout)
   end
 
   # GenServer callbacks
@@ -29,19 +33,19 @@ defmodule YAR.Connection do
     {:reply, :ok, state}
   end
 
-  def handle_call(:recv, _from, state) do
-    {:reply, do_recv(state[:socket], ""), state}
+  def handle_call({:recv, length}, _from, state) do
+    {:reply, do_recv(state[:socket], YAR.RESP.Parser.new("", length)), state}
   end
 
   # local functions
 
-  defp do_recv(sock, resp) do
+  defp do_recv(sock, parser_state) do
     piece = Socket.Stream.recv!(sock)
-    new_resp = resp <> piece
-    if YAR.RESP.complete_response?(new_resp) do
-      new_resp
+    new_state = YAR.RESP.Parser.append_parse(parser_state, piece)
+    if YAR.RESP.Parser.complete?(new_state) do
+      YAR.RESP.Parser.results(new_state)
     else
-      do_recv(sock, new_resp)
+      do_recv(sock, new_state)
     end
   end
 end

@@ -83,6 +83,14 @@ defmodule YARTest do
     assert "bar\r\nbaz" == YAR.get(c, "foo")
   end
 
+  test "huge payload", %{connection: c} do
+    value = String.duplicate("asdf", 100000)
+    assert "OK" == YAR.set(c, "foo", value)
+    got = YAR.get(c, "foo")
+    assert String.length(value) == String.length(got)
+    assert value == got
+  end
+
   test "huge pipeline", %{connection: c} do
     value = "999999888888777777666666"
     assert "OK" = YAR.set(c, "foo", value)
