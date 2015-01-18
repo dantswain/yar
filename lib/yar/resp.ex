@@ -40,6 +40,6 @@ defmodule YAR.RESP do
     from_array(t, so_far <> "$#{length}\r\n#{h}\r\n")
   end
 
-  defp sending_length(s) when is_binary(s), do: String.length(s)
+  defp sending_length(s) when is_binary(s), do: byte_size(s)
   defp sending_length(s) when is_integer(s), do: 1
 end

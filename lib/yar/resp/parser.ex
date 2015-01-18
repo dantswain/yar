@@ -85,13 +85,13 @@ defmodule YAR.RESP.Parser do
     [string, remainder] = chunk(rest)
     length = String.to_integer(string)
 
-    {string_out, remainder} = String.split_at(remainder, length)
-    if String.length(string_out) == length do
-      s
-      |> State.update(remainder, {:string, string_out})
-      |> do_parse
-    else
-      s
+    case try_string_split(remainder, length) do
+      :fail ->
+        s
+      {string_out, remainder} ->
+        s
+        |> State.update(remainder, {:string, string_out})
+        |> do_parse
     end
   end
   defp do_parse(s = %State{string: "*" <> rest}) do
@@ -104,6 +104,18 @@ defmodule YAR.RESP.Parser do
     s
     |> State.update(remainder, {:array, sub_parts})
     |> do_parse
+  end
+
+  defp try_string_split(remainder, length) when byte_size(remainder) < length do
+    :fail
+  end
+  defp try_string_split(remainder, length) do
+    << string_out :: binary-size(length), remainder :: binary >> = remainder
+    if byte_size(string_out) == length do
+      {string_out, remainder}
+    else
+      :fail
+    end
   end
 
   defp chunk(s) do
