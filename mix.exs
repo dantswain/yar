@@ -26,7 +26,8 @@ defmodule YAR.Mixfile do
                 "LICENSE.txt",
                 "mix.exs",
                 "README.md",
-                "lib"
+                "lib",
+                "test"
             ],
         contributors: ["Dan Swain"],
         links: %{"github" => "https://github.com/dantswain/yar"},
