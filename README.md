@@ -11,9 +11,14 @@ from scratch in Elixir using
 (which is itself a wrapper around Erlang's `gen_tcp`)
 for TCP/IP communication.
 
-I started this project mainly as a learning exercise.  It is NOT
-ready for production :)  The defacto Elixir Redis client appears
-to be [exredis](https://github.com/artemeff/exredis).
+This project is probably not ready for production, though I would
+greatly appreciate any feedback and bug reports.
+
+If you are looking for a solid Elixir Redis client,
+check out [exredis](https://github.com/artemeff/exredis).
+exredis is a wrapper around [eredis](https://github.com/wooga/eredis),
+which is an Erlang Redis client that has been around for quite
+some time.
 
 ##Usage
 
@@ -49,6 +54,18 @@ the connection information in a GenServer.
 The list form of execute should be favored for performance reasons.
 That is, `YAR.execute(redis, ["GET", "FOO"])` is slightly more
 performant than `YAR.execute(redis, "GET FOO")`.
+
+##Helpers
+
+YAR has built-in helpers for some Redis commands.
+
+```elixir
+"OK" == YAR.set(c, "foo", "bar")
+"bar" == YAR.get(c, "foo")
+# note keys/values are interleaved
+"OK" == YAR.mset(c, ["foo", 1, "bar", 2])
+["1", "2"] == YAR.mget(c, ["foo"], ["bar"])
+```
 
 ##Pipelining
 
