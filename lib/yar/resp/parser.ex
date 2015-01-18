@@ -22,18 +22,29 @@ defmodule YAR.RESP.Parser do
     end
   end
 
+  @type parser_state :: %State{}
+  @type parse_result :: {:raw_string, String.t} |
+                        {:error, String.t} |
+                        {:integer, integer} |
+                        {:string, String.t} |
+                        {:array, [parse_result]}
+
+  @spec new(String.t, integer) :: parser_state
   def new(string, num_elements) do
     %State{string: string, num_elements: num_elements}
   end
 
+  @spec results(parser_state) :: [parse_result]
   def results(%State{result: result}), do: Enum.reverse(result)
 
+  @spec append_parse(parser_state, String.t) :: parser_state
   def append_parse(s, new_string) do
     s
     |> State.append(new_string)
     |> maybe_do_parse
   end
 
+  @spec complete?(parser_state) :: boolean
   def complete?(s), do: State.complete?(s)
 
   defp maybe_do_parse(s = %State{string: string}) do
